@@ -1,36 +1,23 @@
-language: go
+dist: trusty
+sudo: false
 
-go:
-  - "1.10"
-
-install:
-  #Installs Go Meta Linter (Golint and Go vet are also supported independently)
-  - go get -u gopkg.in/alecthomas/gometalinter.v2
-  - $GOPATH/bin/gometalinter.v2 --install
-  - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.2.0.1873-linux.zip 
-  - unzip sonar-scanner-cli-4.2.0.1873-linux.zip 
-  - rm sonar-scanner-cli-4.2.0.1873-linux.zip 
-  - mv sonar-scanner-4.2.0.1873-linux sonar-scanne
- 
- 
 addons:
   sonarcloud:
-    organization: "rahmaboukhris"
-    token: "e13369a1c4fb21ba40e43edc9d610d9c532b0440" # encrypted value of your token
+    organization: "sonarcloud"
+    token:
+      secure: "ZTIIFCM4RUOmWTJsDDdIkylaKScmj2AFfJfm70E9dJVz9jvalRfZmkMSY55i9tVgZ6Ixw/wSA3VuVbI0PYGx2m7CXlSIqWIjkuMcHrEOx8yP8l5O59QKkHzapAFVwa2OR0Ns9ebjCMDhMAkg8eA29U+3Pn+n43Ic4Gopa8c52zklkpQLAVkQVST6Se9Tx3D3nT/8j08381Ki+Dd9l0CHojs62chnYCmSnCpMCqMc6/Seer05672DootkZ8pLLeGIpuLEZ+8m9lnAeNCnuG7D732Rq5O5ykqu9wzqOHvNFB+Y5/vdIpQIi21V8lt6oOSoBcSkPIjbDwCXr4qCJmLYYQZo3/XKxi+cSZEN61GlUis624Fmj7j2jlPDqGGDftnDx6XQRPsPZglsGwGY1d7R78rnMVM1PPgcECuN6VUqprGfNzn+hxs4DePp89zLLGrsVafwjDMAwLCJfSC4yPYC3ue3DbxxYa1yPcwhHVJgqtjoGToDqA6sH1DWay0Ur4pPijmiVkoaiZrS6ShoS2Ghi0X0LdjjTELikRlkvgmYBMaZg6dhqE4iv0yxmhE9nPg7ICZcq4ukqIbLswKxUHOjjyKX5Yh3Kc/sX6qRFBwZaYsLY+QAcdJ17UW6+bA4MVBKFHZsezc5MJ7kULthGRdW6dYS2tc0wq7l6/FIhjdVyzs="
 
 script:
-  # Execute Go Meta Linter
- - mkdir build
-  - cd build
-  - cmake ..
-  - cd ..
+  # Prepare the build system
+  - autoreconf --install
+  - ./configure
   # Wraps the compilation with the Build Wrapper to generate configuration (used
   # later by the SonarQube Scanner) into the "bw-output" folder
-  - build-wrapper-linux-x86-64 --out-dir bw-output cmake --build build/
-  # Execute tests and coverage
-  # And then execute SonarCloud analysis which will run its own code analysis, and also reuse the linters' results
-  - sonar-scanner/bin/sonar-scanner -Dsonar.organization=rahmaboukhris -Dsonar.projectKey=testmanual -Dsonar.projectName=testmanual -Dsonar.cfamily.build-wrapper-output=bw_output
+  - build-wrapper-linux-x86-64 --out-dir bw-output make clean all
+  # And finally run the SonarQube analysis - read the "sonar-project.properties"
+  # file to see the specific configuration
+  - sonar-scanner
 
 cache:
   directories:
-  - '$HOME/.sonar/cache'
+    - '$HOME/.sonar/cache'
